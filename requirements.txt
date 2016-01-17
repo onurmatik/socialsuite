@@ -1,0 +1,12 @@
+Django
+twython
+requests[security]
+Unidecode
+pytz
+
+
+#boto==2.38.0
+#celery==3.1.18
+#django-redis==4.3.0
+#pygexf==0.2.2
+#unicodecsv==0.13.0

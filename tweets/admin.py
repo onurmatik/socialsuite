@@ -1,5 +1,5 @@
 from django.contrib import admin
-from tweets.models import Tweet, Hashtag, TweetHashtag, Symbol, Media, Link
+from tweets.models import Tweet
 
 
 class MediaInline(admin.TabularInline):
@@ -21,8 +21,7 @@ class LinkInline(admin.TabularInline):
 @admin.register(Tweet)
 class TweetAdmin(admin.ModelAdmin):
     FIELDS = (
-        'tweet_id',
-        'user',
+        'user_screen_name',
         'text',
         'created_at',
         'favorite_count',
@@ -31,11 +30,7 @@ class TweetAdmin(admin.ModelAdmin):
         'is_reply',
         'is_retweet',
         'is_deleted',
-        # m2m
-        'media_count',
-        'url_count',
-        'mention_count',
-        'hashtag_count',
+        'entity_count',
     )
     list_display = FIELDS
     readonly_fields = FIELDS
@@ -45,14 +40,4 @@ class TweetAdmin(admin.ModelAdmin):
         SymbolInline,
         LinkInline,
     )
-    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
-
-
-@admin.register(Hashtag)
-class HashtagAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-
-
-@admin.register(TweetHashtag)
-class TweetHashtagAdmin(admin.ModelAdmin):
-    list_display = ('tag', 'time')
+    exclude = ('tweets', 'media', 'urls', 'mentions', 'hashtags', 'symbols')

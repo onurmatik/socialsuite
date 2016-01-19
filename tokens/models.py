@@ -36,7 +36,7 @@ class OAuthToken(models.Model):
     ), default='w')
 
     def __unicode__(self):
-        return self.app_name
+        return '%s - %s' % (self.application.name, self.user.username)
 
     def get_client(self):
         return Twython(

@@ -1,22 +1,34 @@
 #encoding: utf-8
 
 import re
+from datetime import datetime
+from django.utils import timezone
+from email.utils import parsedate
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
-from twython import Twython, TwythonError, TwythonRateLimitError
 
 
-twitter_client = Twython(
-    settings.TWITTER_KEY,
-    settings.TWITTER_SECRET,
-    settings.ACCESS_TOKEN,
-    settings.ACCESS_TOKEN_SECRET,
-)
+current_timezone = timezone.get_current_timezone()
+
+
+def parse_datetime(string):
+    if settings.USE_TZ:
+        return datetime(*(parsedate(string)[:6]), tzinfo=current_timezone)
+    else:
+        return datetime(*(parsedate(string)[:6]))
+
+
+class Mention(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    screen_name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=150)
+
+    def __unicode__(self):
+        return self.name
 
 
 class Hashtag(models.Model):
-    name = models.CharField(max_length=140, unique=True)
+    name = models.CharField(max_length=140, unique=True, db_index=True)
 
     def __unicode__(self):
         return self.name
@@ -31,7 +43,8 @@ class Link(models.Model):
 
 
 class Media(models.Model):
-    url = models.URLField(unique=True, db_index=True)
+    short_url = models.URLField(unique=True, db_index=True)
+    expanded_url = models.URLField()
     type = models.CharField(max_length=1, choices=(
         ('p', 'photo'),
         ('v', 'video'),
@@ -48,6 +61,68 @@ class Symbol(models.Model):
         return self.name
 
 
+class TweetManager(models.Manager):
+    def create_from_json(self, data):
+        # create tweet object from the Twitter API response
+        tweet, created = self.get_or_create(
+            tweet_id=data['id'],
+            defaults={
+                'text': data['text'],
+                'truncated': data['truncated'],
+                'lang': data.get('lang'),
+                'created_at': parse_datetime(data['created_at']),
+                'favorite_count': data['favorite_count'],
+                'retweet_count': data['retweet_count'],
+                'in_reply_to_status_id': data['in_reply_to_status_id'],
+                'in_reply_to_user_id': data['in_reply_to_user_id'],
+                'retweeted_status_id': data.get('retweeted_status') and data['retweeted_status']['id'],
+                'latitude': data.get('coordinates') and data['coordinates']['coordinates'][0],
+                'longitude': data.get('coordinates') and data['coordinates']['coordinates'][1],
+                'user_screen_name': data['user']['screen_name'],
+            }
+        )
+
+        if created:
+            tweet.mentions.add(*[
+                Mention.objects.get_or_create(
+                    id=mention['id'],
+                    defaults={
+                        'screen_name': mention['screen_name'],
+                        'name': mention['name'],
+                    }
+                )[0] for mention in data['entities'].get('user_mentions', [])
+            ])
+            tweet.hashtags.add(*[
+                Hashtag.objects.get_or_create(
+                    name=hashtag['text']
+                )[0] for hashtag in data['entities'].get('hashtags', [])
+            ])
+            tweet.symbols.add(*[
+                Symbol.objects.get_or_create(
+                    name=symbol['text']
+                )[0] for symbol in data['entities'].get('symbols', [])
+            ])
+            tweet.media.add(*[
+                Media.objects.get_or_create(
+                    short_url=media['url'],
+                    defaults={
+                        'expanded_url': media['media_url'],
+                        'type': media['type'][0],  # take the first letter of 'photo' or 'video'
+                    }
+                )[0] for media in data['entities'].get('media', [])
+            ])
+            tweet.urls.add(*[
+                Link.objects.get_or_create(
+                    short_url=url['url'],
+                    defaults={
+                        'expanded_url': url['expanded_url'],
+                    }
+                )[0] for url in data['entities'].get('urls', [])
+            ])
+
+        return tweet
+
+
 class Tweet(models.Model):
     tweet_id = models.BigIntegerField()
     text = models.CharField(max_length=250)
@@ -62,18 +137,17 @@ class Tweet(models.Model):
     latitude = models.FloatField(null=True, blank=True, default=None)
     longitude = models.FloatField(null=True, blank=True, default=None)
 
-    user = models.ForeignKey(User, blank=True, default=None)
-    user_screen_name = models.CharField(max_length=50)  # de-normalization; so tweet can be created before the user
+    user_screen_name = models.CharField(max_length=50, db_index=True)
 
     media = models.ManyToManyField(Media, blank=True)
     urls = models.ManyToManyField(Link, blank=True)
     symbols = models.ManyToManyField(Symbol, blank=True)
-
-    mentions = models.ManyToManyField(User, blank=True, related_name='mentioned_tweets')
-
-    hashtags = models.ManyToManyField(Hashtag, through='TweetHashtag', blank=True)
+    mentions = models.ManyToManyField(Mention, blank=True)
+    hashtags = models.ManyToManyField(Hashtag, blank=True)
 
     deleted = models.DateTimeField(blank=True, null=True)
+
+    objects = TweetManager()
 
     @property
     def has_geo(self):
@@ -92,27 +166,12 @@ class Tweet(models.Model):
         return not self.deleted is None
 
     @property
-    def media_count(self):
-        return self.media.count()
-
-    @property
-    def url_count(self):
-        return self.urls.count()
-
-    @property
-    def mention_count(self):
-        return self.mentions.count()
-
-    @property
-    def hashtag_count(self):
-        return self.hashtags.count()
-
-
-re_hashtag = re.compile(r'(\A|\W)#(\w{3,})', re.UNICODE)
-re_username = re.compile(r'(?<=^|(?<=[^a-zA-Z0-9-\.]))@([A-Za-z_]+[A-Za-z0-9_]+)')
-
-
-class TweetHashtag(models.Model):
-    tag = models.ForeignKey(Hashtag)
-    tweet = models.ForeignKey(Tweet)
-    time = models.DateTimeField(auto_now_add=True, db_index=True)
+    def entity_count(self):
+        counts = {
+            'media': self.media.count(),
+            'urls': self.urls.count(),
+            '@s': self.mentions.count(),
+            '#s': self.hashtags.count(),
+            '$s': self.symbols.count(),
+        }
+        return '; '.join(['%s: %s' % (key, value) for key, value in counts.items() if value > 0])

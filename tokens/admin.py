@@ -8,6 +8,6 @@ class OAuthTokenInline(admin.TabularInline):
 
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'name', 'key', 'secret', 'type', 'status')
-    list_editable = ('user', 'name', 'key', 'secret', 'type', 'status')
+    list_display = ('name', 'user', 'key', 'secret', 'type', 'status')
+    list_editable = ('user', 'key', 'secret', 'type', 'status')
     inlines = (OAuthTokenInline,)

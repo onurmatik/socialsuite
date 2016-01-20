@@ -8,7 +8,7 @@ from twython import Twython
 class Application(models.Model):
     OK, RESTRICTED, SUSPENDED = (0, 1, 2)
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, blank=True, null=True)
     name = models.CharField(max_length=100)
     key = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
@@ -35,7 +35,7 @@ class OAuthTokenManager(models.Manager):
 
 class OAuthToken(models.Model):
     application = models.ForeignKey(Application)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, blank=True, null=True)
     token = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)

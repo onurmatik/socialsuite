@@ -11,12 +11,11 @@ setup(
     name='django-tweets',
     version='0.1',
     packages=[
-        'tokens',
         'logs',
-        'tweets',
-        'streams',
         'profiles',
-        'follows',
+        'streams',
+        'tokens',
+        'tweets',
     ],
     install_requires=[
         'Django',

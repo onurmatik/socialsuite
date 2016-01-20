@@ -16,14 +16,16 @@ class LogManager(models.Manager):
 
 
 class Log(models.Model):
+    INFO, WARNING, ERROR = ('i', 'w', 'e')
+
     source = models.CharField(max_length=150)
     code = models.CharField(max_length=5, blank=True, null=True)
     message = models.TextField(blank=True, null=True)
     retry_after = models.DateTimeField(blank=True, null=True)
     type = models.CharField(max_length=1, choices=(
-        ('i', 'info'),
-        ('w', 'warning'),
-        ('e', 'error'),
+        (INFO, 'info'),
+        (WARNING, 'warning'),
+        (ERROR, 'error'),
     ), default='i')
     time = models.DateTimeField(auto_now_add=True)
 

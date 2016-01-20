@@ -1,6 +1,3 @@
-#encoding: utf-8
-
-import re
 from datetime import datetime
 from django.utils import timezone
 from email.utils import parsedate
@@ -62,6 +59,9 @@ class Symbol(models.Model):
 
 
 class TweetManager(models.Manager):
+    def get_by_id(self, id):
+        pass
+
     def create_from_json(self, data):
         # create tweet object from the Twitter API response
         tweet, created = self.get_or_create(

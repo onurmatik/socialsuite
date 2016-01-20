@@ -6,6 +6,8 @@ from twython import Twython
 
 
 class Application(models.Model):
+    OK, RESTRICTED, SUSPENDED = (0, 1, 2)
+
     user = models.ForeignKey(User)
     name = models.CharField(max_length=100)
     key = models.CharField(max_length=200)
@@ -17,10 +19,18 @@ class Application(models.Model):
         ('f', 'Follow / Unfollow'),
     ), blank=True, null=True)
     status = models.PositiveSmallIntegerField(choices=(
-        (0, 'OK'),
-        (1, 'Restricted write access'),
-        (2, 'Suspended')
+        (OK, 'OK'),
+        (RESTRICTED, 'Restricted write access'),
+        (SUSPENDED, 'Suspended')
     ), default=0)
+
+
+class OAuthTokenManager(models.Manager):
+    READ, WRITE, MESSAGE = (1, 2, 3)
+
+    def get_rest_client(self, access_level=WRITE):
+        token = self.filter(application__status__lte=1).filter(access_level__gte=access_level).first()
+        return token.get_rest_client()
 
 
 class OAuthToken(models.Model):
@@ -30,18 +40,38 @@ class OAuthToken(models.Model):
     secret = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
     access_level = models.CharField(max_length=1, choices=(
-        ('r', 'Read only'),
-        ('w', 'Read and Write'),
-        ('m', 'Read, Write and Access direct messages'),
+        (OAuthTokenManager.READ, 'Read only'),
+        (OAuthTokenManager.WRITE, 'Read and Write'),
+        (OAuthTokenManager.MESSAGE, 'Read, Write and Access direct messages'),
     ), default='w')
+    retry_after = models.DateTimeField(blank=True, null=True)
+
+    objects = OAuthTokenManager()
 
     def __unicode__(self):
         return '%s - %s' % (self.application.name, self.user.username)
 
-    def get_client(self):
+    def get_rest_client(self):
         return Twython(
             self.application.key,
             self.application.secret,
             self.token,
             self.secret,
         )
+
+    def get_stream_client(self):
+        return Twython(
+            self.application.key,
+            self.application.secret,
+            self.token,
+            self.secret,
+        )
+
+
+class RateLimitStatus(models.Model):
+    token = models.ForeignKey(OAuthToken)
+    time = models.DateTimeField(auto_now_add=True)
+    resource = models.CharField(max_length=100)
+    limit = models.PositiveIntegerField()
+    remaining = models.PositiveIntegerField()
+    reset = models.DateTimeField()

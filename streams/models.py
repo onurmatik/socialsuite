@@ -19,12 +19,19 @@ class Streamer(TwythonStreamer):
         self.stream = stream
         self.ignore_names = self.stream.ignore_names and stream.ignore_names.split(',')
         self.ignore_keywords = self.stream.ignore_keywords and stream.ignore_keywords.split(',')
+        self.user_names = self.stream.screen_names and stream.screen_names.split(',')
         super(Streamer, self).__init__(**kwargs)
 
     def on_success(self, data):
         if 'text' in data:
             # check against filters
             ignore = False
+
+            # users
+            if self.stream.is_retweet is False and self.stream.is_reply is False:
+                # we only care about those users' tweets
+                if not data['user']['screen_name'] in self.user_names:
+                    ignore = True
 
             # ignored users
             if data['user']['screen_name'] in self.ignore_names:
@@ -88,7 +95,7 @@ class Streamer(TwythonStreamer):
             # reply status
             if not ignore:
                 if not self.stream.is_reply is None:
-                    is_reply = 'in_reply_to_status_id' in data
+                    is_reply = not data.get('in_reply_to_status_id') is None
                     ignore = is_reply != self.stream.is_reply
 
             if not ignore:
@@ -154,14 +161,8 @@ class Stream(models.Model):
         super(Stream, self).save(**kwargs)
 
     def fetch_user_ids(self):
-        token = OAuthToken.objects.filter(application__status__lte=1).first()
+        rest_client = OAuthToken.objects.get_rest_client(access_level=OAuthToken.objects.READ)
         user_ids = None
-        rest_client = Twython(
-            app_key=token.application.key,
-            app_secret=token.application.secret,
-            oauth_token=token.token,
-            oauth_token_secret=token.secret,
-        )
         try:
             result = rest_client.lookup_user(
                 screen_name=self.screen_names,
@@ -187,16 +188,16 @@ class Stream(models.Model):
             params['locations'] = self.locations
         return params
 
-    def listen(self):
+    def get_stream_client(self):
         token = OAuthToken.objects.filter(application__status__lte=1).first()
         if not token:
             Log.objects.create(
                 message='No token available',
                 source='[stream-%s] Initializing %s' % (self.id, self.name),
-                type='e',
+                type=Log.ERROR,
             )
         else:
-            stream_client = Streamer(
+            return Streamer(
                 app_key=token.application.key,
                 app_secret=token.application.secret,
                 oauth_token=token.token,
@@ -204,12 +205,17 @@ class Stream(models.Model):
                 stream=self,
             )
 
+    def listen(self):
+        stream_client = self.get_stream_client()
+        Log.objects.create(
+            message='Stream started',
+            source='[stream-%s] Initialized %s' % (self.id, self.name),
+            type=Log.INFO,
+        )
+
+        try:
             stream_client.statuses.filter(
                 **self.get_params()
             )
-
-            Log.objects.create(
-                message='Stream started',
-                source='[stream-%s] Initialized %s' % (self.id, self.name),
-                type='i',
-            )
+        except:
+            print "Connection error"

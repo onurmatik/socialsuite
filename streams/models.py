@@ -8,10 +8,15 @@ except ImportError:
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.dispatch import Signal
+from django.conf import settings
 from twython import Twython, TwythonStreamer, TwythonError, TwythonRateLimitError
 from tweets.models import Tweet
 from tokens.models import OAuthToken
 from logs.models import Log
+
+
+tweet_received = Signal(providing_args=['stream', 'data'])
 
 
 class Streamer(TwythonStreamer):
@@ -99,9 +104,13 @@ class Streamer(TwythonStreamer):
                     ignore = is_reply != self.stream.is_reply
 
             if not ignore:
-                # create the tweet object and add it to the stream's tweet set
-                tweet = Tweet.objects.create_from_json(data)
-                self.stream.tweets.add(tweet)
+                if self.stream.save_tweets:
+                    # create the tweet object and add it to the stream's tweet set
+                    tweet = Tweet.objects.create_from_json(data)
+                    self.stream.tweets.add(tweet)
+                else:
+                    # let another app handle the tweet
+                    tweet_received.send(self.__class__, stream=self.stream, data=data)
 
         elif 'delete' in data:
             Tweet.objects.filter(tweet_id=data['delete']['status']['id_str']).update(deleted=timezone.now())
@@ -148,6 +157,9 @@ class Stream(models.Model):
     is_reply = models.NullBooleanField(default=None)
 
     owner = models.ForeignKey(User, blank=True, null=True)
+
+    # Should we save the tweets or let another app handle them via signals
+    save_tweets = models.BooleanField(default=getattr(settings, 'AUTO_SAVE_TWEETS', True))
 
     objects = StreamManager()
 

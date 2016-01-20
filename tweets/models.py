@@ -3,6 +3,8 @@ from django.utils import timezone
 from email.utils import parsedate
 from django.db import models
 from django.conf import settings
+from tokens.models import OAuthTokenManager
+from twython import TwythonError, TwythonRateLimitError
 
 
 current_timezone = timezone.get_current_timezone()
@@ -59,30 +61,38 @@ class Symbol(models.Model):
 
 
 class TweetManager(models.Manager):
-    def get_by_id(self, id):
-        pass
+    def get_by_id(self, id, save=True):
+        # TODO: handle exception and create using a task queue
+        rest_client = OAuthTokenManager.get_rest_client(access_level=OAuthTokenManager.READ)
+        result = rest_client.search(id=id)
+        for data in result:
+            self.create_from_json(data)
 
-    def create_from_json(self, data):
-        # create tweet object from the Twitter API response
-        tweet, created = self.get_or_create(
+    def json_to_tweet(self, data):
+        # Convert a json object received from the Twitter API to a Tweet object
+        return Tweet(
             tweet_id=data['id'],
-            defaults={
-                'text': data['text'],
-                'truncated': data['truncated'],
-                'lang': data.get('lang'),
-                'created_at': parse_datetime(data['created_at']),
-                'favorite_count': data['favorite_count'],
-                'retweet_count': data['retweet_count'],
-                'in_reply_to_status_id': data['in_reply_to_status_id'],
-                'in_reply_to_user_id': data['in_reply_to_user_id'],
-                'retweeted_status_id': data.get('retweeted_status') and data['retweeted_status']['id'],
-                'latitude': data.get('coordinates') and data['coordinates']['coordinates'][0],
-                'longitude': data.get('coordinates') and data['coordinates']['coordinates'][1],
-                'user_screen_name': data['user']['screen_name'],
-            }
+            text=data['text'],
+            truncated=data['truncated'],
+            lang=data.get('lang'),
+            created_at=parse_datetime(data['created_at']),
+            favorite_count=data['favorite_count'],
+            retweet_count=data['retweet_count'],
+            in_reply_to_status_id=data['in_reply_to_status_id'],
+            in_reply_to_user_id=data['in_reply_to_user_id'],
+            retweeted_status_id=data.get('retweeted_status') and data['retweeted_status']['id'],
+            latitude=data.get('coordinates') and data['coordinates']['coordinates'][0],
+            longitude=data.get('coordinates') and data['coordinates']['coordinates'][1],
+            user_screen_name=data['user']['screen_name'],
         )
 
-        if created:
+    def create_from_json(self, data):
+        # Get or create a tweet object from the Twitter API response
+        try:
+            tweet = Tweet.objects.get(tweet_id=data['id'])
+        except Tweet.DoesNotExist:
+            tweet = self.json_to_tweet(data)
+            tweet.save()
             tweet.mentions.add(*[
                 Mention.objects.get_or_create(
                     id=mention['id'],
@@ -119,7 +129,6 @@ class TweetManager(models.Manager):
                     }
                 )[0] for url in data['entities'].get('urls', [])
             ])
-
         return tweet
 
 

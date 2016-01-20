@@ -213,9 +213,6 @@ class Stream(models.Model):
             type=Log.INFO,
         )
 
-        try:
-            stream_client.statuses.filter(
-                **self.get_params()
-            )
-        except:
-            print "Connection error"
+        stream_client.statuses.filter(
+            **self.get_params()
+        )

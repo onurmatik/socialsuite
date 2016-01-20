@@ -11,7 +11,7 @@ setup(
     name='django-tweets',
     version='0.1',
     packages=[
-        'auth',
+        'tokens',
         'logs',
         'tweets',
         'streams',

@@ -4,18 +4,26 @@ from tweets.models import Tweet, Hashtag, Symbol
 
 class MediaInline(admin.TabularInline):
     model = Tweet.media.through
+    readonly_fields = ('media',)
+    max_num = 0
 
 
 class HashtagInline(admin.TabularInline):
     model = Tweet.hashtags.through
+    readonly_fields = ('hashtag',)
+    max_num = 0
 
 
 class SymbolInline(admin.TabularInline):
     model = Tweet.symbols.through
+    readonly_fields = ('symbol',)
+    max_num = 0
 
 
 class LinkInline(admin.TabularInline):
     model = Tweet.urls.through
+    readonly_fields = ('link',)
+    max_num = 0
 
 
 @admin.register(Tweet)
@@ -47,7 +55,7 @@ class TweetAdmin(admin.ModelAdmin):
         SymbolInline,
         LinkInline,
     )
-    exclude = ('tweets', 'media', 'urls', 'mentions', 'hashtags', 'symbols')
+    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
 
 
 @admin.register(Hashtag)

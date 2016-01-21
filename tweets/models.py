@@ -5,6 +5,7 @@ from django.db import models
 from django.conf import settings
 from tokens.models import OAuthTokenManager
 from twython import TwythonError, TwythonRateLimitError
+from profiles.models import User
 
 
 current_timezone = timezone.get_current_timezone()
@@ -15,15 +16,6 @@ def parse_datetime(string):
         return datetime(*(parsedate(string)[:6]), tzinfo=current_timezone)
     else:
         return datetime(*(parsedate(string)[:6]))
-
-
-class Mention(models.Model):
-    id = models.BigIntegerField(primary_key=True)
-    screen_name = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=150)
-
-    def __unicode__(self):
-        return self.name
 
 
 class Hashtag(models.Model):
@@ -83,7 +75,6 @@ class TweetManager(models.Manager):
             retweeted_status_id=data.get('retweeted_status') and data['retweeted_status']['id'],
             latitude=data.get('coordinates') and data['coordinates']['coordinates'][0],
             longitude=data.get('coordinates') and data['coordinates']['coordinates'][1],
-            user_screen_name=data['user']['screen_name'],
         )
 
     def create_from_json(self, data):
@@ -92,9 +83,16 @@ class TweetManager(models.Manager):
             tweet = Tweet.objects.get(tweet_id=data['id'])
         except Tweet.DoesNotExist:
             tweet = self.json_to_tweet(data)
+            tweet.user = User.objects.get_or_create(
+                id=data['user']['id'],
+                defaults={
+                    'screen_name': data['user']['screen_name'],
+                    'name': data['user']['name'],
+                }
+            )[0]
             tweet.save()
             tweet.mentions.add(*[
-                Mention.objects.get_or_create(
+                User.objects.get_or_create(
                     id=mention['id'],
                     defaults={
                         'screen_name': mention['screen_name'],
@@ -146,12 +144,12 @@ class Tweet(models.Model):
     latitude = models.FloatField(null=True, blank=True, default=None)
     longitude = models.FloatField(null=True, blank=True, default=None)
 
-    user_screen_name = models.CharField(max_length=50, db_index=True)
+    user = models.ForeignKey(User)
 
     media = models.ManyToManyField(Media, blank=True)
     urls = models.ManyToManyField(Link, blank=True)
     symbols = models.ManyToManyField(Symbol, blank=True)
-    mentions = models.ManyToManyField(Mention, blank=True)
+    mentions = models.ManyToManyField(User, blank=True, related_name='mentioned_tweets')
     hashtags = models.ManyToManyField(Hashtag, blank=True)
 
     deleted = models.DateTimeField(blank=True, null=True)

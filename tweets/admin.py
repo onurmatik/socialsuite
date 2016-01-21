@@ -1,5 +1,5 @@
 from django.contrib import admin
-from tweets.models import Tweet, Hashtag, Mention, Symbol
+from tweets.models import Tweet, Hashtag, Symbol
 
 
 class MediaInline(admin.TabularInline):
@@ -21,7 +21,7 @@ class LinkInline(admin.TabularInline):
 @admin.register(Tweet)
 class TweetAdmin(admin.ModelAdmin):
     list_display = (
-        'user_screen_name',
+        'user',
         'text',
         'created_at',
         'is_reply',
@@ -31,7 +31,6 @@ class TweetAdmin(admin.ModelAdmin):
         'entity_count',
     )
     readonly_fields = (
-        'user_screen_name',
         'text',
         'created_at',
         'favorite_count',
@@ -53,11 +52,6 @@ class TweetAdmin(admin.ModelAdmin):
 
 @admin.register(Hashtag)
 class HashtagAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Mention)
-class MentionAdmin(admin.ModelAdmin):
     pass
 
 

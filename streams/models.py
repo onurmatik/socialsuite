@@ -156,8 +156,6 @@ class Stream(models.Model):
     is_retweet = models.NullBooleanField(default=None)
     is_reply = models.NullBooleanField(default=None)
 
-    owner = models.ForeignKey(User, blank=True, null=True)
-
     # Should we save the tweets or let another app handle them via signals
     save_tweets = models.BooleanField(default=getattr(settings, 'AUTO_SAVE_TWEETS', True))
 

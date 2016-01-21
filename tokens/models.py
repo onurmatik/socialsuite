@@ -39,17 +39,17 @@ class OAuthToken(models.Model):
     token = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
-    access_level = models.CharField(max_length=1, choices=(
+    access_level = models.PositiveSmallIntegerField(choices=(
         (OAuthTokenManager.READ, 'Read only'),
         (OAuthTokenManager.WRITE, 'Read and Write'),
         (OAuthTokenManager.MESSAGE, 'Read, Write and Access direct messages'),
-    ), default='w')
+    ), default=OAuthTokenManager.WRITE)
     retry_after = models.DateTimeField(blank=True, null=True)
 
     objects = OAuthTokenManager()
 
     def __unicode__(self):
-        return '%s - %s' % (self.application.name, self.user.username)
+        return '%s - %s' % (self.application.name, self.get_access_level_display())
 
     def get_rest_client(self):
         return Twython(

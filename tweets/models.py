@@ -63,7 +63,7 @@ class TweetManager(models.Manager):
     def json_to_tweet(self, data):
         # Convert a json object received from the Twitter API to a Tweet object
         return Tweet(
-            tweet_id=data['id'],
+            id=data['id'],
             text=data['text'],
             truncated=data['truncated'],
             lang=data.get('lang'),
@@ -80,7 +80,7 @@ class TweetManager(models.Manager):
     def create_from_json(self, data):
         # Get or create a tweet object from the Twitter API response
         try:
-            tweet = Tweet.objects.get(tweet_id=data['id'])
+            tweet = Tweet.objects.get(id=data['id'])
         except Tweet.DoesNotExist:
             tweet = self.json_to_tweet(data)
             tweet.user = User.objects.get_or_create(
@@ -131,7 +131,7 @@ class TweetManager(models.Manager):
 
 
 class Tweet(models.Model):
-    tweet_id = models.BigIntegerField()
+    id = models.BigIntegerField(primary_key=True)
     text = models.CharField(max_length=250)
     truncated = models.BooleanField(default=False)
     lang = models.CharField(max_length=9, null=True, blank=True)
@@ -177,8 +177,8 @@ class Tweet(models.Model):
         counts = {
             'media': self.media.count(),
             'urls': self.urls.count(),
-            '@s': self.mentions.count(),
-            '#s': self.hashtags.count(),
-            '$s': self.symbols.count(),
+            '@': self.mentions.count(),
+            '#': self.hashtags.count(),
+            '$': self.symbols.count(),
         }
-        return '; '.join(['%s: %s' % (key, value) for key, value in counts.items() if value > 0])
+        return '; '.join(['%s %s' % (key, value) for key, value in counts.items() if value > 0])

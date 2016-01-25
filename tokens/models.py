@@ -8,8 +8,7 @@ from twython import Twython
 class Application(models.Model):
     OK, RESTRICTED, SUSPENDED = (0, 1, 2)
 
-    user = models.ForeignKey(User, blank=True, null=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=True, null=True)
     key = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
     type = models.CharField(max_length=1, choices=(

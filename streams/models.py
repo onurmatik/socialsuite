@@ -7,7 +7,6 @@ except ImportError:
 
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
 from django.dispatch import Signal
 from django.conf import settings
 from twython import Twython, TwythonStreamer, TwythonError, TwythonRateLimitError
@@ -91,17 +90,29 @@ class Streamer(TwythonStreamer):
                     if not has_symbol == self.stream.has_symbol:
                         ignore = True
 
-            # retweet status
-            if not ignore:
-                if not self.stream.is_retweet is None:
-                    is_retweet = 'retweeted_status' in data
-                    ignore = is_retweet != self.stream.is_retweet
-
             # reply status
             if not ignore:
                 if not self.stream.is_reply is None:
                     is_reply = not data.get('in_reply_to_status_id') is None
                     ignore = is_reply != self.stream.is_reply
+
+            # retweet status
+            is_retweet = None
+            if not ignore:
+                if not self.stream.is_retweet is None:
+                    is_retweet = 'retweeted_status' in data
+                    ignore = is_retweet != self.stream.is_retweet
+
+            if is_retweet:
+                try:
+                    retweeted = Tweet.objects.get(id=data['retweeted_status']['id'])
+                except Tweet.DoesNotExist:
+                    # TODO: ids can be queued to be fetched by the rest client
+                    pass
+                else:
+                    retweeted.retweet_count = data['retweeted_status']['retweet_count']
+                    retweeted.favorite_count = data['retweeted_status']['favorite_count']
+                    retweeted.save()
 
             if not ignore:
                 if self.stream.save_tweets:
@@ -113,7 +124,7 @@ class Streamer(TwythonStreamer):
                     tweet_received.send(self.__class__, stream=self.stream, data=data)
 
         elif 'delete' in data:
-            Tweet.objects.filter(tweet_id=data['delete']['status']['id_str']).update(deleted=timezone.now())
+            Tweet.objects.filter(id=data['delete']['status']['id']).update(deleted=timezone.now())
 
     def on_error(self, code, message):
         Log.objects.create(

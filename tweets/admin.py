@@ -1,5 +1,6 @@
 from django.contrib import admin
 from tweets.models import Tweet, Hashtag, Symbol
+import unicodecsv
 
 
 class MediaInline(admin.TabularInline):
@@ -35,6 +36,8 @@ class TweetAdmin(admin.ModelAdmin):
         'is_reply',
         'is_retweet',
         'lang',
+        'retweet_count',
+        'favorite_count',
         'is_deleted',
         'entity_count',
     )
@@ -56,6 +59,60 @@ class TweetAdmin(admin.ModelAdmin):
         LinkInline,
     )
     exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
+    actions = ('export_tweets', 'export_hashtags')
+
+    def export_tweets(self, request, queryset):
+        """
+        user | time | tweet | lang | has_hashtag | has_media | has_link
+        """
+        f = open('tweets.csv', 'wb')
+        writer = unicodecsv.writer(f, encoding='utf-8')
+        writer.writerow((
+            'user',
+            'time',
+            'tweet',
+            'lang',
+            'has_hashtag',
+            'has_media',
+            'has_link',
+        ))
+        for tweet in queryset:
+            writer.writerow((
+                tweet.user.screen_name,
+                tweet.created_at,
+                tweet.text.replace('\n', ' '),
+                tweet.lang,
+                tweet.hashtags.count() > 0,
+                tweet.media.count() > 0,
+                tweet.urls.count() > 0,
+            ))
+        f.close()
+
+    def export_hashtags(self, request, queryset):
+        """
+        user | time | hashtag | lang | has_media | has_link
+        """
+        f = open('hashtags.csv', 'wb')
+        writer = unicodecsv.writer(f, encoding='utf-8')
+        writer.writerow((
+            'user',
+            'time',
+            'hashtag',
+            'lang',
+            'has_media',
+            'has_link',
+        ))
+        for tweet in queryset:
+            for hashtag in tweet.hashtags.all():
+                writer.writerow((
+                    tweet.user.screen_name,
+                    tweet.created_at,
+                    hashtag.name,
+                    tweet.lang,
+                    tweet.media.count() > 0,
+                    tweet.urls.count() > 0,
+                ))
+        f.close()
 
 
 @admin.register(Hashtag)

@@ -33,7 +33,7 @@ INSTALLED_APPS = (
     'logs',
     'tweets',
     'streams',
-    'profiles',
+    'users',
 )
 
 MIDDLEWARE_CLASSES = (

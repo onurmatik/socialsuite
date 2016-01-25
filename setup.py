@@ -12,7 +12,7 @@ setup(
     version='0.1',
     packages=[
         'logs',
-        'profiles',
+        'users',
         'streams',
         'tokens',
         'tweets',
@@ -22,6 +22,7 @@ setup(
         'twython',
         'requests[security]',
         'Unidecode',
+        'pytz',
     ],
     include_package_data=True,
     license='BSD License',

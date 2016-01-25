@@ -5,7 +5,7 @@ from django.db import models
 from django.conf import settings
 from tokens.models import OAuthTokenManager
 from twython import TwythonError, TwythonRateLimitError
-from profiles.models import User
+from users.models import User
 
 
 current_timezone = timezone.get_current_timezone()

@@ -1,5 +1,5 @@
 from django.core.management.base import NoArgsCommand
-from profiles.models import Profile
+from users.models import Profile
 
 
 class Command(NoArgsCommand):

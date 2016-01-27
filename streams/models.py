@@ -167,6 +167,13 @@ class Stream(models.Model):
     is_retweet = models.NullBooleanField(default=None)
     is_reply = models.NullBooleanField(default=None)
 
+    user_is_verified = models.NullBooleanField(default=None)
+    user_min_followers = models.PositiveIntegerField(default=0)
+    user_min_following = models.PositiveIntegerField(default=0)
+    user_min_follow_ratio = models.FloatField(default=0)
+    user_has_profile_image = models.NullBooleanField(default=None)
+    user_is_geo_enabled = models.NullBooleanField(default=None)
+
     # Should we save the tweets or let another app handle them via signals
     save_tweets = models.BooleanField(default=getattr(settings, 'AUTO_SAVE_TWEETS', True))
 

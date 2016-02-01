@@ -3,14 +3,14 @@ Upstart configuration
 
 /etc/init/stream.conf
 
-description "twitter stream"
+description "twitter streamer"
 start on runlevel [2345]
-stop on runlevel [06]
+stop on runlevel [!2345]
 
 respawn
 
 script
-    cd /home/ubuntu/bullsbears/
+    cd /home/ubuntu/[project]/
     . env/bin/activate
     python manage.py stream > stream.log
 end script

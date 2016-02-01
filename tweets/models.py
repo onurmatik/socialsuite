@@ -152,6 +152,8 @@ class Tweet(models.Model):
     mentions = models.ManyToManyField(User, blank=True, related_name='mentioned_tweets')
     hashtags = models.ManyToManyField(Hashtag, blank=True)
 
+    replica_of = models.ForeignKey('self', blank=True, null=True)
+
     deleted = models.DateTimeField(blank=True, null=True)
 
     objects = TweetManager()

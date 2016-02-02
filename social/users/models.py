@@ -28,8 +28,8 @@ class User(models.Model):
         return getattr(self._latest, 'friends_count', None)
 
 
-class ProfileManager(models.Manager):
-    def update_profiles(self):
+class ProfileHistoryManager(models.Manager):
+    def update_history(self):
 
         def chunks(l, n=100):  # 100 is the Twitter limit
             for i in xrange(0, len(l), n):
@@ -65,7 +65,7 @@ class ProfileManager(models.Manager):
                     )
 
 
-class Profile(models.Model):
+class ProfileHistory(models.Model):
     user = models.ForeignKey(User)
     time = models.DateTimeField(auto_now_add=True)
 
@@ -82,7 +82,7 @@ class Profile(models.Model):
     followers_count = models.PositiveIntegerField(default=0)
     friends_count = models.PositiveIntegerField(default=0)
 
-    objects = ProfileManager()
+    objects = ProfileHistoryManager()
 
     class Meta:
         ordering = ('-time',)

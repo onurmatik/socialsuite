@@ -1,5 +1,5 @@
 from django.contrib import admin
-from tokens.models import Application, OAuthToken
+from social.tokens.models import Application, OAuthToken
 
 
 class OAuthTokenInline(admin.TabularInline):

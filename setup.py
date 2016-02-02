@@ -11,11 +11,7 @@ setup(
     name='django-social-suite',
     version='0.1',
     packages=[
-        'logs',
-        'users',
-        'streams',
-        'tokens',
-        'tweets',
+        'social',
     ],
     install_requires=[
         'Django',

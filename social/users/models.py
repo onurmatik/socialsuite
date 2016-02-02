@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.conf import settings
 from twython import TwythonError, TwythonRateLimitError
-from tokens.models import OAuthToken
+from social.tokens.models import OAuthToken
 
 
 class User(models.Model):

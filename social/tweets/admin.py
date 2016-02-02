@@ -1,5 +1,5 @@
 from django.contrib import admin
-from tweets.models import Tweet, Hashtag, Symbol
+from social.tweets.models import Tweet, Hashtag, Symbol
 import unicodecsv
 
 

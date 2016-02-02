@@ -1,8 +1,4 @@
 include README.rst
 include MANIFEST.in
-graft logs
-graft streams
-graft tokens
-graft tweets
-graft users
+graft social
 global-exclude *.py[co]

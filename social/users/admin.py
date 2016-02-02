@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import User, Profile
+from social.users.models import User, Profile
 
 
 class ProfileInline(admin.TabularInline):

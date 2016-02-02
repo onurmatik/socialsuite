@@ -1,5 +1,5 @@
 from django.contrib import admin
-from logs.models import Log
+from social.logs.models import Log
 
 
 @admin.register(Log)

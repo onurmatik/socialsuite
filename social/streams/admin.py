@@ -1,5 +1,5 @@
 from django.contrib import admin
-from streams.models import Stream
+from social.streams.models import Stream
 
 
 @admin.register(Stream)

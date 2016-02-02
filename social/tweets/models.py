@@ -3,9 +3,9 @@ from django.utils import timezone
 from email.utils import parsedate
 from django.db import models
 from django.conf import settings
-from tokens.models import OAuthTokenManager
+from social.tokens.models import OAuthTokenManager
 from twython import TwythonError, TwythonRateLimitError
-from users.models import User
+from social.users.models import User
 
 
 current_timezone = timezone.get_current_timezone()

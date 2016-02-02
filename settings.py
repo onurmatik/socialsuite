@@ -29,11 +29,11 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.staticfiles',
 
-    'tokens',
-    'logs',
-    'tweets',
-    'streams',
-    'users',
+    'social.tokens',
+    'social.logs',
+    'social.tweets',
+    'social.streams',
+    'social.users',
 )
 
 MIDDLEWARE_CLASSES = (

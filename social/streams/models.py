@@ -10,9 +10,9 @@ from django.utils import timezone
 from django.dispatch import Signal
 from django.conf import settings
 from twython import Twython, TwythonStreamer, TwythonError, TwythonRateLimitError
-from tweets.models import Tweet
-from tokens.models import OAuthToken
-from logs.models import Log
+from social.tweets.models import Tweet
+from social.tokens.models import OAuthToken
+from social.logs.models import Log
 
 
 tweet_received = Signal(providing_args=['stream', 'data'])

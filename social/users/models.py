@@ -86,4 +86,4 @@ class ProfileHistory(models.Model):
 
     class Meta:
         ordering = ('-time',)
-        verbose_name_plural = 'Profile histories'
+        verbose_name_plural = 'Profile history'

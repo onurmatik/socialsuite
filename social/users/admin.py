@@ -1,9 +1,9 @@
 from django.contrib import admin
-from social.users.models import User, Profile
+from social.users.models import User, ProfileHistory
 
 
 class ProfileInline(admin.TabularInline):
-    model = Profile
+    model = ProfileHistory
 
 
 @admin.register(User)
@@ -13,6 +13,6 @@ class UserAdmin(admin.ModelAdmin):
     inlines = (ProfileInline,)
 
 
-@admin.register(Profile)
+@admin.register(ProfileHistory)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('time', 'screen_name', 'name', 'followers_count', 'friends_count')

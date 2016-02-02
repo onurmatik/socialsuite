@@ -11,7 +11,7 @@ from django.dispatch import Signal
 from django.conf import settings
 from twython import Twython, TwythonStreamer, TwythonError, TwythonRateLimitError
 from social.tweets.models import Tweet
-from social.tokens.models import OAuthToken
+from social.tokens.models import AccessToken, READ
 from social.logs.models import Log
 
 
@@ -152,7 +152,7 @@ class Stream(models.Model):
     filter_level = models.CharField(max_length=1, default='n',
                                     choices=(('n', 'none'), ('l', 'low'), ('m', 'medium')))
     tweets = models.ManyToManyField(Tweet, blank=True)
-    token = models.ForeignKey(OAuthToken, blank=True, null=True)
+    token = models.ForeignKey(AccessToken, blank=True, null=True)
 
     # filters
     ignore_names = models.TextField(blank=True, null=True)
@@ -189,7 +189,7 @@ class Stream(models.Model):
         super(Stream, self).save(**kwargs)
 
     def fetch_user_ids(self):
-        rest_client = OAuthToken.objects.get_rest_client(access_level=OAuthToken.objects.READ)
+        rest_client = Application.objects.get_rest_client(access_level=READ)
         user_ids = None
         try:
             result = rest_client.lookup_user(
@@ -217,7 +217,7 @@ class Stream(models.Model):
         return params
 
     def get_stream_client(self):
-        token = OAuthToken.objects.filter(application__status__lte=1).first()
+        token = AccessToken.objects.filter(application__status__lte=1).first()
         if not token:
             Log.objects.create(
                 message='No token available',

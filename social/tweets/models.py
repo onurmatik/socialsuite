@@ -3,7 +3,7 @@ from django.utils import timezone
 from email.utils import parsedate
 from django.db import models
 from django.conf import settings
-from social.tokens.models import OAuthTokenManager
+from social.tokens.models import Application, READ
 from twython import TwythonError, TwythonRateLimitError
 from social.users.models import User
 
@@ -55,7 +55,7 @@ class Symbol(models.Model):
 class TweetManager(models.Manager):
     def get_by_id(self, id, save=True):
         # TODO: handle exception and create using a task queue
-        rest_client = OAuthTokenManager.get_rest_client(access_level=OAuthTokenManager.READ)
+        rest_client = Application.objects.get_rest_client(access_level=READ)
         result = rest_client.search(id=id)
         for data in result:
             self.create_from_json(data)

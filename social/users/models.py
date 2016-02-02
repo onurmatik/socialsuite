@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.conf import settings
 from twython import TwythonError, TwythonRateLimitError
-from social.tokens.models import OAuthToken
+from social.tokens.models import Application, READ
 
 
 class User(models.Model):
@@ -35,7 +35,7 @@ class ProfileHistoryManager(models.Manager):
             for i in xrange(0, len(l), n):
                 yield l[i:i+n]
 
-        rest_client = OAuthToken.objects.get_rest_client(access_level=OAuthToken.objects.READ)
+        rest_client = Application.objects.get_rest_client(access_level=READ)
 
         names = User.objects.filter(follow_history=True).filter(active=True).values_list('screen_name', flat=True)
 

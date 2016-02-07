@@ -3,6 +3,7 @@ from django.utils import timezone
 from email.utils import parsedate
 from django.db import models
 from django.conf import settings
+from django.template.defaultfilters import slugify
 from social.tokens.models import Application, READ
 from twython import TwythonError, TwythonRateLimitError
 from social.users.models import User
@@ -20,9 +21,15 @@ def parse_datetime(string):
 
 class Hashtag(models.Model):
     name = models.CharField(max_length=140, unique=True, db_index=True)
+    slug = models.SlugField(unique=True, db_index=True, blank=True, null=True)
 
     def __unicode__(self):
         return self.name
+
+    def save(self, **kwargs):
+        if getattr(settings, 'AUTO_SLUGIFY_HASHTAG', False):
+            self.slug = slugify(self.name)
+        super(Hashtag, self).save(**kwargs)
 
 
 class Link(models.Model):
@@ -134,15 +141,15 @@ class Tweet(models.Model):
     id = models.BigIntegerField(primary_key=True)
     text = models.CharField(max_length=250)
     truncated = models.BooleanField(default=False)
-    lang = models.CharField(max_length=9, null=True, blank=True)
-    created_at = models.DateTimeField(db_index=True)
-    favorite_count = models.PositiveIntegerField(default=0)
-    retweet_count = models.PositiveIntegerField(default=0)
-    in_reply_to_status_id = models.BigIntegerField(null=True, blank=True)
-    in_reply_to_user_id = models.BigIntegerField(null=True, blank=True)
-    retweeted_status_id = models.BigIntegerField(null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True, default=None)
-    longitude = models.FloatField(null=True, blank=True, default=None)
+    lang = models.CharField(max_length=9, null=True, blank=True, db_index=True)
+    created_at = models.DateTimeField(editable=False, db_index=True)
+    favorite_count = models.PositiveIntegerField(default=0, db_index=True)
+    retweet_count = models.PositiveIntegerField(default=0, db_index=True)
+    in_reply_to_status_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    in_reply_to_user_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    retweeted_status_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    latitude = models.FloatField(null=True, blank=True, db_index=True)
+    longitude = models.FloatField(null=True, blank=True, db_index=True)
 
     user = models.ForeignKey(User)
 

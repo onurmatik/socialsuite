@@ -34,6 +34,7 @@ INSTALLED_APPS = (
     'social.tweets',
     'social.streams',
     'social.users',
+    'social.bookmarks',
 )
 
 MIDDLEWARE_CLASSES = (

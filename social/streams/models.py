@@ -11,7 +11,7 @@ from django.dispatch import Signal
 from django.conf import settings
 from twython import Twython, TwythonStreamer, TwythonError, TwythonRateLimitError
 from social.tweets.models import Tweet
-from social.tokens.models import AccessToken, READ
+from social.tokens.models import Application, AccessToken, READ
 from social.logs.models import Log
 
 

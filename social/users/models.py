@@ -12,7 +12,7 @@ class User(models.Model):
     name = models.CharField(max_length=150)
 
     active = models.BooleanField(default=True)
-    follow_history = models.BooleanField(default=getattr(settings, 'AUTO_FOLLOW_PROFILE_HISTORY', False))
+    follow_profile_history = models.BooleanField(default=getattr(settings, 'AUTO_FOLLOW_PROFILE_HISTORY', False))
 
     def __unicode__(self):
         return self.screen_name
@@ -29,7 +29,7 @@ class User(models.Model):
 
 
 class ProfileHistoryManager(models.Manager):
-    def update_history(self):
+    def update_history(self, screen_name=None):
 
         def chunks(l, n=100):  # 100 is the Twitter limit
             for i in xrange(0, len(l), n):

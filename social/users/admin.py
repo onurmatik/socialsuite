@@ -8,8 +8,8 @@ class ProfileInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('screen_name', 'name', 'followers_count', 'friends_count', 'follow_history')
-    list_editable = ('follow_history',)
+    list_display = ('screen_name', 'name', 'followers_count', 'friends_count', 'follow_profile_history')
+    list_editable = ('follow_profile_history',)
     inlines = (ProfileInline,)
 
 

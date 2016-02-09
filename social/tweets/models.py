@@ -140,7 +140,17 @@ class TweetManager(models.Manager):
         import networkx as nx
         G = nx.Graph()
         for tweet in qs:
-            G.add_node(tweet.id)
+            G.add_node(
+                tweet.id,
+                lang=tweet.lang,
+                created_at=tweet.created_at.strftime('%Y-%m-%d %H:%m'),
+                favorite_count=tweet.favorite_count,
+                retweet_count=tweet.retweet_count,
+                is_reply=tweet.is_reply,
+                is_retweet=tweet.is_retweet,
+                is_deleted=tweet.is_deleted,
+                has_geo=tweet.has_geo,
+            )
             G.add_node('@%s' % tweet.user.screen_name)
             G.add_edge(tweet.id, '@%s' % tweet.user.screen_name)
             for hashtag in tweet.hashtags.all():

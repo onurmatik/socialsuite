@@ -136,13 +136,31 @@ class TweetManager(models.Manager):
             ])
         return tweet
 
+    def to_graph(self, qs):
+        import networkx as nx
+        G = nx.Graph()
+        for tweet in qs:
+            G.add_node(tweet.id)
+            G.add_node('@%s' % tweet.user.screen_name)
+            G.add_edge(tweet.id, '@%s' % tweet.user.screen_name)
+            for hashtag in tweet.hashtags.all():
+                G.add_node('#%s' % hashtag.name)
+                G.add_edge(tweet.id, '#%s' % hashtag.name)
+            for mention in tweet.mentions.all():
+                G.add_node('@%s' % mention.screen_name)
+                G.add_edge(tweet.id, '@%s' % mention.screen_name)
+            for symbol in tweet.symbols.all():
+                G.add_node('$%s' % symbol.name)
+                G.add_edge(tweet.id, '$%s' % symbol.name)
+        return G
+
 
 class Tweet(models.Model):
     id = models.BigIntegerField(primary_key=True)
     text = models.CharField(max_length=250)
     truncated = models.BooleanField(default=False)
     lang = models.CharField(max_length=9, null=True, blank=True, db_index=True)
-    created_at = models.DateTimeField(editable=False, db_index=True)
+    created_at = models.DateTimeField(db_index=True)
     favorite_count = models.PositiveIntegerField(default=0, db_index=True)
     retweet_count = models.PositiveIntegerField(default=0, db_index=True)
     in_reply_to_status_id = models.BigIntegerField(null=True, blank=True, db_index=True)

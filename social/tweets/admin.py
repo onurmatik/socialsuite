@@ -41,25 +41,19 @@ class TweetAdmin(admin.ModelAdmin):
         'is_deleted',
         'entity_count',
     )
-    readonly_fields = (
-        'text',
-        'created_at',
-        'favorite_count',
-        'retweet_count',
-        'has_geo',
-        'is_reply',
-        'is_retweet',
-        'is_deleted',
-        'entity_count',
-    )
     inlines = (
         MediaInline,
         HashtagInline,
         SymbolInline,
         LinkInline,
     )
-    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
-    actions = ('export_tweets', 'export_hashtags')
+#    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
+    actions = ('export_to_graphml', 'export_tweets', 'export_hashtags')
+
+    def export_to_graphml(self, request, queryset):
+        import networkx as nx
+        graph = Tweet.objects.to_graph(queryset)
+        nx.write_graphml(graph, "test.graphml")
 
     def export_tweets(self, request, queryset):
         """

@@ -20,6 +20,7 @@ setup(
         'Unidecode',
         'pytz',
         'unicodecsv',
+        'networkx',
     ],
     include_package_data=True,
     license='BSD License',

@@ -42,7 +42,7 @@ class AccessToken(models.Model):
     retry_after = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
-        return '%s - %s' % (self.application.name, self.get_access_level_display())
+        return self.application.name
 
     def get_rest_client(self):
         return Twython(

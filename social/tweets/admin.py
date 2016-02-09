@@ -47,13 +47,20 @@ class TweetAdmin(admin.ModelAdmin):
         SymbolInline,
         LinkInline,
     )
-#    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
+    exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
     actions = ('export_to_graphml', 'export_tweets', 'export_hashtags')
+    date_hierarchy = 'created_at'
 
     def export_to_graphml(self, request, queryset):
         import networkx as nx
+        from django.http import HttpResponse
         graph = Tweet.objects.to_graph(queryset)
-        nx.write_graphml(graph, "test.graphml")
+        response = HttpResponse(
+            '\n'.join(nx.generate_graphml(graph)),
+            content_type='text/graphml'
+        )
+        response['Content-Disposition'] = 'attachment; filename=tweets.graphml'
+        return response
 
     def export_tweets(self, request, queryset):
         """

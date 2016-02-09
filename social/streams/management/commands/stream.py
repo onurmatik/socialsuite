@@ -18,7 +18,7 @@ end script
 
 
 from django.core.management.base import BaseCommand
-from streams.models import Stream
+from social.streams.models import Stream
 
 
 class Command(BaseCommand):

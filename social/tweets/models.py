@@ -142,6 +142,8 @@ class TweetManager(models.Manager):
         for tweet in qs:
             G.add_node(
                 tweet.id,
+                label=tweet.text,
+                type='tweet',
                 lang=tweet.lang,
                 created_at=tweet.created_at.strftime('%Y-%m-%d %H:%m'),
                 favorite_count=tweet.favorite_count,
@@ -151,17 +153,44 @@ class TweetManager(models.Manager):
                 is_deleted=tweet.is_deleted,
                 has_geo=tweet.has_geo,
             )
-            G.add_node('@%s' % tweet.user.screen_name)
-            G.add_edge(tweet.id, '@%s' % tweet.user.screen_name)
+            G.add_node(
+                '@%s' % tweet.user.screen_name,
+                type='user',
+            )
+            G.add_edge(
+                tweet.id,
+                '@%s' % tweet.user.screen_name,
+                type='tweeted',
+            )
             for hashtag in tweet.hashtags.all():
-                G.add_node('#%s' % hashtag.name)
-                G.add_edge(tweet.id, '#%s' % hashtag.name)
+                G.add_node(
+                    '#%s' % hashtag.name,
+                    type='hashtag',
+                )
+                G.add_edge(
+                    tweet.id,
+                    '#%s' % hashtag.name,
+                    type='tagged',
+                )
             for mention in tweet.mentions.all():
-                G.add_node('@%s' % mention.screen_name)
-                G.add_edge(tweet.id, '@%s' % mention.screen_name)
+                G.add_node(
+                    '@%s' % mention.screen_name,
+                    type='user',
+                )
+                G.add_edge(
+                    tweet.id,
+                    '@%s' % mention.screen_name,
+                    type='mentioned',
+                )
             for symbol in tweet.symbols.all():
-                G.add_node('$%s' % symbol.name)
-                G.add_edge(tweet.id, '$%s' % symbol.name)
+                G.add_node(
+                    '$%s' % symbol.name,
+                    type='symbol',
+                )
+                G.add_edge(
+                    tweet.id,
+                    '$%s' % symbol.name,
+                )
         return G
 
 

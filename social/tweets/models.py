@@ -1,4 +1,5 @@
 from datetime import datetime
+import networkx as nx
 from django.utils import timezone
 from email.utils import parsedate
 from django.db import models
@@ -136,8 +137,7 @@ class TweetManager(models.Manager):
             ])
         return tweet
 
-    def to_graph(self, qs):
-        import networkx as nx
+    def tweet_graph(self, qs):
         G = nx.Graph()
         for tweet in qs:
             G.add_node(
@@ -190,6 +190,26 @@ class TweetManager(models.Manager):
                 G.add_edge(
                     tweet.id,
                     '$%s' % symbol.name,
+                )
+        return G
+
+    def hashtag_user_graph(self, qs):
+        G = nx.Graph()
+        for tweet in qs:
+            user = '@%s' % tweet.user.screen_name
+            G.add_node(
+                user,
+                type='user',
+            )
+            for hashtag in tweet.hashtags.all():
+                hashtag = '#%s' % hashtag.name
+                G.add_node(
+                    hashtag,
+                    type='hashtag',
+                )
+                G.add_edge(
+                    user,
+                    hashtag,
                 )
         return G
 

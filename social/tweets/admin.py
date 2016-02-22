@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.http import HttpResponse
+import networkx as nx
 from social.tweets.models import Tweet, Hashtag, Symbol
-import unicodecsv
 
 
 class MediaInline(admin.TabularInline):
@@ -48,19 +49,28 @@ class TweetAdmin(admin.ModelAdmin):
         LinkInline,
     )
     exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
-    actions = ('export_to_graphml',)
+    actions = ('tweet_graph', 'hashtag_user_graph')
     date_hierarchy = 'created_at'
 
-    def export_to_graphml(self, request, queryset):
-        import networkx as nx
-        from django.http import HttpResponse
-        graph = Tweet.objects.to_graph(queryset)
+    def tweet_graph(self, request, queryset):
+        graph = Tweet.objects.tweet_graph(queryset)
         response = HttpResponse(
             '\n'.join(nx.generate_graphml(graph)),
             content_type='text/graphml'
         )
         response['Content-Disposition'] = 'attachment; filename=tweets.graphml'
         return response
+    tweet_graph.short_description = 'Download tweet graph'
+
+    def hashtag_user_graph(self, request, queryset):
+        graph = Tweet.objects.hashtag_user_graph(queryset)
+        response = HttpResponse(
+            '\n'.join(nx.generate_graphml(graph)),
+            content_type='text/graphml'
+        )
+        response['Content-Disposition'] = 'attachment; filename=hashtags-users.graphml'
+        return response
+    hashtag_user_graph.short_description = 'Download hashtag - user graph'
 
 
 @admin.register(Hashtag)

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import HttpResponse
 import networkx as nx
-from social.tweets.models import Tweet, Hashtag, Symbol
+from social.tweets.models import Tweet, User, Hashtag, Symbol
 
 
 class MediaInline(admin.TabularInline):
@@ -71,6 +71,11 @@ class TweetAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename=hashtags-users.graphml'
         return response
     hashtag_user_graph.short_description = 'Download hashtag - user graph'
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(Hashtag)

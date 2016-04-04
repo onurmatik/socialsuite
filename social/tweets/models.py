@@ -6,8 +6,6 @@ from django.db import models
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from social.tokens.models import Application, READ
-from twython import TwythonError, TwythonRateLimitError
-from social.users.models import User
 
 
 current_timezone = timezone.get_current_timezone()
@@ -20,17 +18,26 @@ def parse_datetime(string):
         return datetime(*(parsedate(string)[:6]))
 
 
+class User(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    screen_name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=150)
+
+    def __unicode__(self):
+        return self.screen_name
+
+
 class Hashtag(models.Model):
-    name = models.CharField(max_length=140, unique=True, db_index=True)
+    name = models.CharField(max_length=140, unique=True)
     slug = models.SlugField(unique=True, db_index=True, blank=True, null=True)
+
+    def save(self, **kwargs):
+        if not self.slug and getattr(settings, 'AUTO_SLUGIFY_HASHTAG', False):
+            self.slug = slugify(self.name)
+        super(Hashtag, self).save(**kwargs)
 
     def __unicode__(self):
         return self.name
-
-    def save(self, **kwargs):
-        if getattr(settings, 'AUTO_SLUGIFY_HASHTAG', False):
-            self.slug = slugify(self.name)
-        super(Hashtag, self).save(**kwargs)
 
 
 class Link(models.Model):
@@ -50,7 +57,7 @@ class Media(models.Model):
     ))
 
     def __unicode__(self):
-        return self.url
+        return self.expanded_url
 
 
 class Symbol(models.Model):
@@ -58,6 +65,27 @@ class Symbol(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Keyword(models.Model):
+    term = models.CharField(max_length=50, unique=True)
+    hashtag = models.CharField(max_length=140, unique=True, db_index=True)
+    slug = models.SlugField(unique=True, db_index=True, blank=True, null=True)
+    ignore = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.name
+
+    def hashtag_to_keyword(self):
+        pass
+
+    def keyword_to_hashtag(self):
+        pass
+
+    def save(self, **kwargs):
+        if getattr(settings, 'AUTO_SLUGIFY_HASHTAG', False):
+            self.slug = slugify(self.name)
+        super(Keyword, self).save(**kwargs)
 
 
 class TweetManager(models.Manager):
@@ -230,13 +258,18 @@ class Tweet(models.Model):
 
     user = models.ForeignKey(User)
 
-    media = models.ManyToManyField(Media, blank=True)
-    urls = models.ManyToManyField(Link, blank=True)
-    symbols = models.ManyToManyField(Symbol, blank=True)
-    mentions = models.ManyToManyField(User, blank=True, related_name='mentioned_tweets')
-    hashtags = models.ManyToManyField(Hashtag, blank=True)
+    media = models.ManyToManyField(Media, through='TweetMedia', blank=True)
+    urls = models.ManyToManyField(Link, through='TweetLink', blank=True)
 
-    replica_of = models.ForeignKey('self', blank=True, null=True)
+    symbols = models.ManyToManyField(Symbol, through='TweetSymbol', blank=True)
+    keywords = models.ManyToManyField(Keyword, through='TweetKeyword', blank=True)
+    hashtags = models.ManyToManyField(Hashtag, through='TweetHashtag', blank=True)
+    mentions = models.ManyToManyField(User, through='TweetMention', blank=True, related_name='mentioned_tweets')
+
+    favorites = models.ManyToManyField(User, blank=True, related_name='favorited_tweets')
+    retweets = models.ManyToManyField(User, blank=True, related_name='retweeted_tweets')
+
+    repost_of = models.ForeignKey('self', blank=True, null=True)
 
     deleted = models.DateTimeField(blank=True, null=True)
 
@@ -268,3 +301,43 @@ class Tweet(models.Model):
             '$': self.symbols.count(),
         }
         return '; '.join(['%s %s' % (key, value) for key, value in counts.items() if value > 0])
+
+
+# M2M through fields
+
+class TweetHashtag(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    hashtag = models.ForeignKey(Hashtag)
+    time = models.DateTimeField(auto_now_add=True)
+    lang = models.CharField(max_length=9, null=True, blank=True, db_index=True)
+
+
+class TweetLink(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    link = models.ForeignKey(Link)
+    time = models.DateTimeField(auto_now_add=True)
+
+
+class TweetMention(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    user = models.ForeignKey(User)
+    time = models.DateTimeField(auto_now_add=True)
+
+
+class TweetMedia(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    media = models.ForeignKey(Media)
+    time = models.DateTimeField(auto_now_add=True)
+
+
+class TweetSymbol(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    symbol = models.ForeignKey(Symbol)
+    time = models.DateTimeField(auto_now_add=True)
+
+
+class TweetKeyword(models.Model):
+    tweet = models.ForeignKey(Tweet)
+    keyword = models.ForeignKey(Keyword)
+    time = models.DateTimeField(auto_now_add=True)
+    lang = models.CharField(max_length=9, null=True, blank=True, db_index=True)

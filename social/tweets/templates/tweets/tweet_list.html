@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+
+{% block extrahead %}
+
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+{% endblock %}
+
+
+{% block extrajs %}
+
+    <script src="{% static "typeahead/typeahead.bundle.min.js" %}"></script>
+    <script src="{% static "js/timeline.js" %}"></script>
+    <script src="{% static "tagsinput/jquery.tagsinput.min.js" %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static "tagsinput/jquery.tagsinput.min.css" %}" />
+
+    <script>
+        $('#tags').tagsInput();
+    </script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>
+    <div class="pull-right">
+        <a
+            href="https://www.facebook.com/sharer/sharer.php?u=http://genelizleyici.com{{ request.get_full_path }}"
+            target="_blank"><i class="fa fa-facebook-square"></i></a>
+        <a
+            href="https://twitter.com/home?status=http://genelizleyici.com{{ request.get_full_path }}"
+            target="_blank"><i class="fa fa-twitter-square"></i></a>
+        <a
+            href="https://plus.google.com/share?url=http://genelizleyici.com{{ request.get_full_path }}"
+            target="_blank"><i class="fa fa-google-plus-square"></i></a>
+    </div>
+
+    <span id="mainTitle">Paylaşımlar</span>
+    <small id="subTitle">Siyasetçilerin sosyal medya paylaşımları</small>
+</h1>
+
+<br>
+
+<div>
+
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation">
+        <a href="#" aria-controls="recent" role="tab" data-toggle="tab" data-type="recent">
+            Yeniler
+        </a>
+    </li>
+    <li role="presentation">
+        <a href="#" aria-controls="bookmarked" role="tab" data-toggle="tab" data-type="bookmarked">
+            Seçilenler
+        </a>
+    </li>
+    <li role="presentation">
+        <a href="#" aria-controls="popular" role="tab" data-toggle="tab" data-type="popular">
+            Öne çıkanlar
+        </a>
+    </li>
+    <li role="presentation">
+        <a href="#" aria-controls="deleted" role="tab" data-toggle="tab" data-type="deleted">
+            Silinenler
+        </a>
+    </li>
+
+    <li class="pull-right hidden-xs" style="padding-left: 5px">
+        <div id="daterange" class="pull-right btn btn-sm btn-default text-muted">
+            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+            <span></span> <b class="caret"></b>
+        </div>
+    </li>
+
+    <li class="pull-right hidden-xs" style="padding-left: 5px">
+        <form>
+            <div class="has-feedback">
+                <input id="inputSearch" type="text" class="form-control input-sm" placeholder="Ara">
+                <span class="glyphicon glyphicon-search form-control-feedback text-muted"></span>
+            </div>
+        </form>
+    </li>
+
+    <li class="pull-right hidden-xs" style="padding-left: 5px">
+        <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="dropdown-label text-muted" id="labelPartyFilter"></span>
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu filter">
+            <li><a href="#" data-parti="">Tüm partiler</a></li>
+            <li><a href="#" data-parti="AKP">AKP</a></li>
+            <li><a href="#" data-parti="CHP">CHP</a></li>
+            <li><a href="#" data-parti="MHP">MHP</a></li>
+            <li><a href="#" data-parti="HDP">HDP</a></li>
+        </ul>
+    </li>
+
+  </ul>
+
+  <br>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane" id="yeni"></div>
+    <div role="tabpanel" class="tab-pane" id="populer"></div>
+    <div role="tabpanel" class="tab-pane" id="silinmis"></div>
+  </div>
+
+</div>
+
+
+<div class="row">
+
+    <div class="col-lg-9">
+        <div id="timeline-container">
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <blockquote>
+            <div id="menu-container">
+            </div>
+        </blockquote>
+    </div>
+
+</div>
+
+{% endblock %}

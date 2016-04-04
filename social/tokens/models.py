@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib.auth.models import User
-from twython import Twython
+from birdy import twitter
 
 
 OK, RESTRICTED, SUSPENDED = (0, 1, 2)
@@ -45,7 +45,7 @@ class AccessToken(models.Model):
         return self.application.name
 
     def get_rest_client(self):
-        return Twython(
+        return twitter.UserClient(
             self.application.key,
             self.application.secret,
             self.token,
@@ -53,7 +53,7 @@ class AccessToken(models.Model):
         )
 
     def get_stream_client(self):
-        return Twython(
+        return twitter.StreamClient(
             self.application.key,
             self.application.secret,
             self.token,

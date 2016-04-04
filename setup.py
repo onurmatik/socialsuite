@@ -21,6 +21,7 @@ setup(
         'pytz',
         'unicodecsv',
         'networkx',
+        'birdy',
     ],
     include_package_data=True,
     license='BSD License',

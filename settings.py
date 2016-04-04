@@ -1,7 +1,7 @@
 from os.path import abspath, dirname, join, normpath
 
 # Absolute filesystem path to the Django project directory:
-DJANGO_ROOT = dirname(dirname(abspath(__file__)))
+BASE_DIR = dirname(abspath(__file__))
 
 DEBUG = True
 
@@ -29,11 +29,13 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.staticfiles',
 
+    'birdy',
+
     'social.tokens',
     'social.logs',
     'social.tweets',
     'social.streams',
-    'social.users',
+    'social.profilehistory',
     'social.bookmarks',
 )
 
@@ -51,7 +53,7 @@ MIDDLEWARE_CLASSES = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

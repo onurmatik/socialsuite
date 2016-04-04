@@ -1,0 +1,105 @@
+<div class="row">
+
+    <div class="pull-right col-lg-6" style="text-align: right">
+        <div class="media">
+            <div class="media-object pull-right">
+               <img src="{{profile_image_url}}" class="avatar-md pull-right" onerror="updateAvatar(this);">
+            </div>
+            <div class="media-body text-right">
+                <h4 class="media-heading"><a href="#" class="mpItem" data-mv="{{slug}}" data-isim="{{vekil_isim}}" data-parti="{{vekil_parti}}" data-sehir="{{vekil_sehir}}">{{vekil_isim}}</a></h4>
+                <p>
+                    {{vekil_parti}} {{vekil_sehir}} {{vekil_donem}}. dönem milletvekili<br>
+                    <small class="text-muted">
+                        <i class="fa fa-clock-o"></i>
+                        <time class="timeago text-muted small" datetime="{{tweet_time}}">
+                            {{tweet_time}}
+                        </time>
+                        <br>
+                        {% if tweet.deleted %}
+                            <strong>{{ tweet_deleted }} sonra sildi</strong>
+                        {% else %}
+                            <i class="fa fa-star-o"></i> {{favorite_count}} &nbsp;
+                            <i class="fa fa-retweet"></i> {{retweet_count}} &nbsp;
+                            <i class="fa fa-reply"></i> {{reply_count}} &nbsp;
+                        {% endif %}
+                    </small>
+
+                    <a class="btn btn-xs">
+                        <i class="fa fa-user-plus"></i> takip et
+                    </a>
+
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="pull-left col-lg-6">
+        <div class="panel panel-default bubble bubble-left" data-id="{{id}}" {% if reply_count %}data-hasreply="true"{% endif %}>
+
+            <div class="panel-body">
+
+                {% if reply_to_user %}
+                    <div class="well well-sm">
+                        <strong>@{{reply_to_user}}:</strong> {{reply_to_html}}
+                    </div>
+                {% endif %}
+
+                {% if tweet_media %}
+                    {% if tweet_video %}
+                        <video width="100%" controls>
+                            <source src="{{tweet_media}}" type="video/mp4">
+                        </video>
+                    {% else %}
+                        {% if tweet_url %}<a href="{{tweet_url}}">{% endif %}
+                            <img src="{{tweet_media}}" style="width: 100%;">
+                        {% if tweet_url %}</a>{% endif %}
+                    {% endif %}
+                {% endif %}
+                <p {% if tweet.deleted %}style="text-decoration: line-through;" class="text-danger"{% endif %}>
+                    {{tweet_html}}
+                </p>
+            </div>
+
+            <div class="tagsDiv collapse"></div>
+
+            <div class="panel-footer tagInput collapse">
+                <div class="input-group">
+                    <input id="btn-input" type="text" class="form-control input-sm" placeholder="Cevabınız...">
+                    <span class="input-group-btn">
+                        <button class="btn btn-info btn-sm">
+                            <i class="fa fa-tags"></i>
+                        </button>
+                    </span>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+
+                {% if user.is_authenticated %}
+
+                    <a class="btnBookmark"><i class="fa fa-bookmark"></i></a>
+
+                {% else %}
+
+                    <span class="text-muted small">işaretleme / etiketleme yapmak için <a href="/login/twitter/">giriş yapın</a></span>
+
+                {% endif %}
+
+                <div class="pull-right">
+                    <a
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://genelizleyici.com/?id={{id}}"
+                        target="_blank"><i class="fa fa-facebook-square"></i></a>
+                    <a
+                        href="https://twitter.com/home?status=http://genelizleyici.com/?id={{id}}"
+                        target="_blank"><i class="fa fa-twitter-square"></i></a>
+                    <a
+                        href="https://plus.google.com/share?url=http://genelizleyici.com/?id={{id}}"
+                        target="_blank"><i class="fa fa-google-plus-square"></i></a>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

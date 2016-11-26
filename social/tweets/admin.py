@@ -3,6 +3,9 @@ from django.http import HttpResponse
 import networkx as nx
 from social.tweets.models import Tweet, User, Hashtag, Symbol
 
+import unicodecsv
+from cStringIO import StringIO
+
 
 class MediaInline(admin.TabularInline):
     model = Tweet.media.through
@@ -51,6 +54,32 @@ class TweetAdmin(admin.ModelAdmin):
     exclude = ('media', 'urls', 'mentions', 'hashtags', 'symbols')
     actions = ('tweet_graph', 'hashtag_user_graph')
     date_hierarchy = 'created_at'
+
+    def download_csv(self, request, queryset):
+        f = StringIO()
+        w = unicodecsv.writer(f, encoding='utf-8')
+        for tweet in queryset:
+            w.writerow((
+                tweet.id,
+                tweet.text,
+                tweet.created_at,
+                tweet.favorite_count,
+                tweet.retweet_count,
+                tweet.in_reply_to_status_id,
+                tweet.in_reply_to_user_id,
+                tweet.retweeted_status_id,
+                '%s,%s' % (tweet.latitude, tweet.longitude),
+                tweet.user.screen_name,
+                tweet.user.id,
+                tweet.user.name,
+            ))
+        f.seek(0)
+        response = HttpResponse(
+            f.read(),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = 'attachment;filename=export.csv'
+        return response
 
     def tweet_graph(self, request, queryset):
         graph = Tweet.objects.tweet_graph(queryset)
